@@ -15,5 +15,13 @@ export class UsersService {
         const newUser = this.usersRepository.create(user);
         return this.usersRepository.save(newUser);
     }
+
+    findAll() {
+        return this.usersRepository.find();
+    }
+
+    findAll_Id(id: number) {
+        return this.usersRepository.findOneBy({id});
+    }
 }
 
