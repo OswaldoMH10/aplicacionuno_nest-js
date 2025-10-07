@@ -2,19 +2,24 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { register } from 'module';
 import { User } from 'src/users/users.entity';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { compare } from 'bcrypt';
 //import { jwtConstants } from './jwt.constants';
 import { JwtService } from '@nestjs/jwt';
+import { Rol } from 'src/roles/rol.entity';
 
 @Injectable()
 export class AuthService {
+    
+    constructor(
+        @InjectRepository(User) private usersRepository: Repository<User>,
+        @InjectRepository(Rol) private rolesRepository: Repository<Rol>,
 
-    constructor(@InjectRepository(User) private usersRepository: Repository<User>,
-     private jwtService:JwtService)//Aqui agregamos un servicio
-     { }
+        private jwtService:JwtService
+    )//Aqui agregamos un servicio
+    { }
 
     async register(user: RegisterAuthDto) {
 
@@ -31,7 +36,12 @@ export class AuthService {
             return new HttpException('El teléfono ya existe', HttpStatus.CONFLICT);
         }
         const newUser = this.usersRepository.create(user);
-       
+
+        //Aqui se trae todos los roles que el usuario me esta enviando a trabes del Id
+        const rolesIds=user.rolesIds;
+        const roles = await this.rolesRepository.findBy({id: In(rolesIds)});
+        newUser.roles=roles;
+    
         const userSaved= await this.usersRepository.save(newUser);
         const payload={id:userSaved.id,name:userSaved.name}
         const token=this.jwtService.sign(payload);
@@ -41,15 +51,13 @@ export class AuthService {
         }
         //En el contexto de JWT (y autenticación en general),
         // la palabra Bearer es un esquema de autorización definido en el estándar HTTP.
-     
+    
         //delete data.user.password;
         delete (data.user as any).password;
-       
+    
         return data; //Retorna el usuario que se creo
 
     }
-
-
 
     async login(loginData: LoginAuthDto) {
 //si el email fué encontrado regresame el usuario
@@ -74,10 +82,9 @@ export class AuthService {
         }
         //En el contexto de JWT (y autenticación en general),
         // la palabra Bearer es un esquema de autorización definido en el estándar HTTP.
-     
+        
         //delete data.user.password;
         delete (data.user as any).password;
-       
         return data;
     }
 
