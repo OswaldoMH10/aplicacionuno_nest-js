@@ -1,8 +1,6 @@
-import { IsEmail, isEmail, IsNotEmpty, isNotEmpty,
-     IsString, isString, MinLength, minLength } from "class-validator";
+import { IsEmail, isEmail, IsNotEmpty, isNotEmpty, IsString, isString, MinLength, minLength } from "class-validator";
 
 export class RegisterAuthDto{
-   
     @IsNotEmpty({ message: 'El nombre no debería estar vacío' })
     @IsString({ message: 'El nombre debe ser texto' })
     name:string;
